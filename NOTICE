@@ -1,0 +1,59 @@
+Third-party content used by the Qur'an tool
+===========================================
+
+The MIT License in LICENSE covers this project's source code only. The
+following components keep their own terms.
+
+1. Qur'an Arabic text
+   File: tool/src/main/assets/quran-uthmani.txt
+   Tanzil Quran Text (Uthmani, Version 1.1)
+   Copyright (C) 2007-2026 Tanzil Project
+   License: Creative Commons Attribution 3.0, with Tanzil's terms of use:
+   verbatim copies only, source clearly indicated, link to tanzil.net.
+   The file is distributed unchanged, with its copyright notice. The tool
+   credits Tanzil and links to https://tanzil.net in its settings screen.
+   For display, the Bismillah at the start of each surah is shown as a
+   heading instead of inside ayah 1; the stored text is not altered.
+
+2. English translation
+   File: tool/src/main/assets/en-pickthall.txt
+   Marmaduke Pickthall, "The Meaning of the Glorious Koran"
+   (Alfred A. Knopf, New York, 1930).
+   Public domain: Pickthall died in 1936, so the work is in the public domain
+   in countries with a term of life plus 70 years or less; in the United
+   States, works published in 1930 entered the public domain on 1 January
+   2026. The digital text is Tanzil's edition (translation id en.pickthall),
+   distributed exactly as Tanzil publishes it. Compared with the 1930 print,
+   Tanzil's edition has light editorial normalization: transliterations
+   without accents ("Lam. Mim." for "Lâm. Mîm."), some capitalization, and
+   in some verses "deity" where the print has "God" (e.g. 2:255). The same
+   edition is used by Quran.com and alquran.cloud. These editorial changes
+   are minor and not themselves copyrightable; the translation remains in
+   the public domain.
+
+3. Font
+   File: tool/src/main/res/font/amiri_quran.ttf
+   Amiri Quran, Copyright 2010-2022 The Amiri Quran Project Authors
+   (https://github.com/aliftype/amiri)
+   License: SIL Open Font License 1.1, full text in
+   tool/src/main/assets/OFL-AmiriQuran.txt (shipped inside the tool).
+   The font is unmodified.
+
+4. Surah names and metadata
+   File: tool/src/main/assets/surahs.json
+   Surah names, meanings, ayah counts and revelation places from the
+   alquran.cloud API (Islamic Network), https://alquran.cloud
+
+5. Recitation audio
+   Not included in this repository or the built tool. The tool streams
+   per-ayah recordings from cdn.islamic.network while the user listens and
+   caches them on the phone. Copyright in the recordings belongs to the
+   reciters or their estates, who license them to Islamic Network for free,
+   non-commercial redistribution; alquran.cloud permits streaming them for
+   personal and educational use. The tool is free and credits each reciter
+   by name.
+
+6. Light SDK
+   tool/build.gradle.kts follows the template in
+   https://github.com/lightphone/light-sdk
+   Copyright (c) 2026 The Light Phone, MIT License.

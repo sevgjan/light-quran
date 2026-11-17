@@ -5,7 +5,8 @@ The Qur'an for the Light Phone III, in Arabic with the English translation, and 
 - Uthmani Arabic text bundled with the tool, in the Amiri Quran typeface. Readable offline from the first launch.
 - English: Marmaduke Pickthall's translation (1930, public domain), bundled with the tool, so it also works offline.
 - Recitation ayah by ayah: Alafasy, Husary, Minshawi, Abdul Basit, Sudais. The current ayah is highlighted and followed, playback continues with the screen off, and any ayah can be repeated for memorisation. Optionally continues into the next surah when one ends (off by default). Audio is cached as you listen.
-- Juz index, bookmarks, continue where you left off, and search in English or Arabic (Arabic search ignores diacritics).
+- Continue where you left off: your place is saved as you read and as you listen, and RESUME takes you back to it.
+- Juz index, bookmarks, and search in English or Arabic (Arabic search ignores diacritics).
 - Show Arabic, English or both, in three Arabic text sizes.
 
 ## Privacy

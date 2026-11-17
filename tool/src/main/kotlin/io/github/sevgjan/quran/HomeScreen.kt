@@ -1,9 +1,11 @@
 package io.github.sevgjan.quran
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,11 +23,10 @@ import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SealedLightContext
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightBottomBar
+import com.thelightphone.sdk.ui.LightIcon
 import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
-import com.thelightphone.sdk.ui.LightTopBar
-import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,13 +58,24 @@ class HomeScreen(sealedActivity: SealedLightActivity) : LightScreen<Unit, HomeVi
         val lastRead by viewModel.lastRead.collectAsState()
 
         QuranPage {
-            LightTopBar(
-                leftButton = LightBarButton.LightIcon(icon = LightIcons.SETTINGS, onClick = {
-                    navigateTo(screenFactory = { SettingsScreen(it, store) })
-                }),
-                center = LightTopBarCenter.Text("Qur'an"),
-                rightButton = LightBarButton.LightIcon(icon = LightIcons.SEARCH, onClick = ::openSearch),
-            )
+            // LightTopBar takes one button per side; saved ayahs sit next to search, so this row is drawn here.
+            Box(modifier = Modifier.fillMaxWidth().height(3f.gridUnitsAsDp()).padding(horizontal = 1f.gridUnitsAsDp())) {
+                LightIcon(
+                    icon = LightIcons.SETTINGS,
+                    modifier = Modifier.align(Alignment.CenterStart).lightClickable {
+                        navigateTo(screenFactory = { SettingsScreen(it, store) })
+                    },
+                )
+                LightText(text = "Qur'an", variant = LightTextVariant.Fine, modifier = Modifier.align(Alignment.Center))
+                Row(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    horizontalArrangement = Arrangement.spacedBy(1.2f.gridUnitsAsDp()),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BookmarkIcon(filled = false, size = 2f, modifier = Modifier.lightClickable(onClick = ::openBookmarks))
+                    LightIcon(icon = LightIcons.SEARCH, modifier = Modifier.lightClickable(onClick = ::openSearch))
+                }
+            }
             LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 1f.gridUnitsAsDp())) {
                 lastRead?.let { ref ->
                     surahs.getOrNull(ref.surah - 1)?.let { surah ->
@@ -85,13 +97,11 @@ class HomeScreen(sealedActivity: SealedLightActivity) : LightScreen<Unit, HomeVi
                 }
             }
             LightBottomBar(
-                listOf(
+                listOfNotNull(
                     LightBarButton.Text(text = "JUZ", onClick = {
                         navigateTo(screenFactory = { JuzScreen(it, lightContext) }) { openReader(it) }
                     }),
-                    LightBarButton.Text(text = "BOOKMARKS", onClick = {
-                        navigateTo(screenFactory = { BookmarksScreen(it, lightContext, store) }) { openReader(it) }
-                    }),
+                    lastRead?.let { ref -> LightBarButton.Text(text = "RESUME", onClick = { openReader(ref) }) },
                 ),
             )
         }
@@ -99,6 +109,10 @@ class HomeScreen(sealedActivity: SealedLightActivity) : LightScreen<Unit, HomeVi
 
     private fun openReader(ref: AyahRef) {
         navigateTo(screenFactory = { ReaderScreen(it, store, ref) })
+    }
+
+    private fun openBookmarks() {
+        navigateTo(screenFactory = { BookmarksScreen(it, lightContext, store) }) { openReader(it) }
     }
 
     private fun openSearch() {

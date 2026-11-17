@@ -35,6 +35,20 @@ object Recitation {
     /** Continue into the next surah when one finishes (a reading preference, off by default). */
     val autoAdvance = MutableStateFlow(false)
 
+    /** Where each recited ayah is saved as the place to continue from, also with the screen off. */
+    private var store: QuranStore? = null
+
+    fun track(store: QuranStore) {
+        this.store = store
+    }
+
+    /** Stops and empties the queue, so the reader shows LISTEN again rather than paused controls. */
+    fun stop(player: LightAudioPlayer) {
+        repeat.value = null
+        player.stop()
+        player.setMediaQueue(emptyList())
+    }
+
     fun player(sealedActivity: SealedLightActivity): LightAudioPlayer = player ?: DefaultLightAudio(sealedActivity)
         .newPlayer(
             LightPlayerSpec(
@@ -55,6 +69,9 @@ object Recitation {
     private fun onItemChanged(player: LightAudioPlayer, index: Int) {
         if (index == NO_MEDIA_ITEM) return
         val queue = player.queue.value
+        queue.getOrNull(index)?.let(::parse)?.let { (_, ref) ->
+            store?.let { scope.launch { it.setLastRead(ref) } }
+        }
         // Repeat: when playback moves past the repeated ayah, jump back to it.
         repeat.value?.let { target ->
             val targetIndex = queue.indexOfFirst { parse(it)?.second == target }

@@ -2,6 +2,7 @@ package io.github.sevgjan.quran
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +23,7 @@ import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SealedLightContext
 import com.thelightphone.sdk.SimpleLightScreen
 import com.thelightphone.sdk.ui.LightBarButton
+import com.thelightphone.sdk.ui.LightIcon
 import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -29,13 +32,21 @@ import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 data class RefRow(val ref: AyahRef, val title: String, val detail: String? = null, val arabic: Boolean = false)
 
-/** A titled list of ayah references. Tapping one returns it. */
+/** A titled list of ayah references. Tapping one returns it; with [onRemove], each row also gets an x on the right. */
 @Composable
-private fun RefList(title: String, rows: List<RefRow>?, empty: String, onBack: () -> Unit, onPick: (AyahRef) -> Unit) {
+private fun RefList(
+    title: String,
+    rows: List<RefRow>?,
+    empty: String,
+    onBack: () -> Unit,
+    onPick: (AyahRef) -> Unit,
+    onRemove: ((AyahRef) -> Unit)? = null,
+) {
     QuranPage {
         LightTopBar(
             leftButton = LightBarButton.LightIcon(icon = LightIcons.BACK, onClick = onBack),
@@ -57,24 +68,35 @@ private fun RefList(title: String, rows: List<RefRow>?, empty: String, onBack: (
             }
             else -> LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 1f.gridUnitsAsDp())) {
                 items(rows) { row ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .lightClickable { onPick(row.ref) }
-                            .padding(vertical = 0.4f.gridUnitsAsDp()),
-                    ) {
-                        LightText(text = row.title, variant = LightTextVariant.Copy, maxLines = 1)
-                        row.detail?.let {
-                            if (row.arabic) {
-                                ArabicText(text = it, sizeSp = 20, maxLines = 2)
-                            } else {
-                                LightText(
-                                    text = it,
-                                    variant = LightTextVariant.Fine,
-                                    lighten = true,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .lightClickable { onPick(row.ref) }
+                                .padding(vertical = 0.4f.gridUnitsAsDp()),
+                        ) {
+                            LightText(text = row.title, variant = LightTextVariant.Copy, maxLines = 1)
+                            row.detail?.let {
+                                if (row.arabic) {
+                                    ArabicText(text = it, sizeSp = 20, maxLines = 2)
+                                } else {
+                                    LightText(
+                                        text = it,
+                                        variant = LightTextVariant.Fine,
+                                        lighten = true,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                        }
+                        onRemove?.let { remove ->
+                            Box(
+                                modifier = Modifier
+                                    .lightClickable { remove(row.ref) }
+                                    .padding(start = 0.8f.gridUnitsAsDp(), top = 0.4f.gridUnitsAsDp(), bottom = 0.4f.gridUnitsAsDp()),
+                            ) {
+                                LightIcon(icon = LightIcons.CLOSE, size = 1f)
                             }
                         }
                     }
@@ -110,6 +132,7 @@ class BookmarksScreen(
 ) : SimpleLightScreen<AyahRef>(sealedActivity) {
     @Composable
     override fun Content() {
+        val scope = rememberCoroutineScope()
         val surahs = rememberSurahs(context)
         val bookmarks by store.bookmarks.collectAsState(initial = emptyList())
         val english by QuranRepository.english.collectAsState()
@@ -119,6 +142,7 @@ class BookmarksScreen(
         RefList(
             "Bookmarks", rows, "No bookmarks yet. Tap an ayah while reading to bookmark it.",
             onBack = { goBack() }, onPick = { goBack(it) },
+            onRemove = { ref -> scope.launch { store.toggleBookmark(ref) } },
         )
     }
 }

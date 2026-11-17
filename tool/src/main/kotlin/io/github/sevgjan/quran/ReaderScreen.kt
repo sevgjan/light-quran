@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewModelScope
@@ -90,6 +91,7 @@ class ReaderViewModel(
             player.awaitReady()
         }
         viewModelScope.launch { store.prefs.collect { Recitation.autoAdvance.value = it.autoAdvance } }
+        Recitation.track(store)
     }
 
     fun select(ayah: Int) {
@@ -107,10 +109,8 @@ class ReaderViewModel(
     fun next() = player.skipToNext()
     fun previous() = player.skipToPrevious()
 
-    fun stop() {
-        Recitation.repeat.value = null
-        player.stop()
-    }
+    /** Stops and empties the queue, so the bar goes back to LISTEN. */
+    fun stop() = Recitation.stop(player)
 
     fun toggleRepeat(ayah: Int) {
         selected.value = null
@@ -244,7 +244,6 @@ class ReaderScreen(
         val marker = buildString {
             if (isPlaying) append("▶ ")
             append("${state.surah.number}:$ayah")
-            if (ayah in state.bookmarks) append("  ★")
             if (isRepeating) append("  repeating")
             if (isSelected) append("  · selected")
         }
@@ -254,7 +253,12 @@ class ReaderScreen(
                 .lightClickable(onClick = onClick)
                 .padding(vertical = 0.6f.gridUnitsAsDp()),
         ) {
-            LightText(text = marker, variant = LightTextVariant.Fine, lighten = !isPlaying && !isSelected)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                LightText(text = marker, variant = LightTextVariant.Fine, lighten = !isPlaying && !isSelected)
+                if (ayah in state.bookmarks) {
+                    BookmarkIcon(filled = true, size = 0.7f, modifier = Modifier.padding(start = 0.4f.gridUnitsAsDp()))
+                }
+            }
             if (state.prefs.display != Display.ENGLISH) {
                 ArabicText(
                     text = state.arabic[ayah - 1],
@@ -287,14 +291,14 @@ class ReaderScreen(
         val items = when {
             selected != null -> listOf(
                 LightBarButton.Text(text = "PLAY", onClick = { viewModel.playFrom(selected) }),
-                LightBarButton.Text(
-                    text = if (selected in state.bookmarks) "UNMARK" else "MARK",
+                // Three text labels don't fit ("UNMARK" was cut off), so marking is the ribbon icon.
+                LightBarButton.Icon(
+                    painter = bookmarkPainter(filled = selected in state.bookmarks),
+                    contentDescription = if (selected in state.bookmarks) "Remove bookmark" else "Bookmark",
                     onClick = { viewModel.toggleBookmark(selected) },
                 ),
-                LightBarButton.Text(
-                    text = if (repeat == AyahRef(state.surah.number, selected)) "NO REPEAT" else "REPEAT",
-                    onClick = { viewModel.toggleRepeat(selected) },
-                ),
+                // Toggles; the ayah's own line says "repeating" while it's on.
+                LightBarButton.Text(text = "REPEAT", onClick = { viewModel.toggleRepeat(selected) }),
             )
             playingAyah != null -> listOf(
                 LightBarButton.LightIcon(icon = LightIcons.REWIND, onClick = viewModel::previous),

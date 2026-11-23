@@ -36,7 +36,7 @@ class TextEditorScreen(
                 onBack = { goBack() },
                 submitLabel = submitLabel,
                 singleLine = true,
-                initialCaps = initialValue.isEmpty(),
+                autoCapitalize = initialValue.isEmpty(),
                 modifier = Modifier.background(LightThemeTokens.colors.background),
             )
         }
